@@ -1,0 +1,306 @@
+:root {
+    --primary: #FF4785;
+    --secondary: #1EA7FD;
+    --accent: #FFAE00;
+    --success: #20D68A;
+    --warning: #FF5A5F;
+    --bg-dark: #1F2937;
+    --text-light: #FFFFFF;
+    --font-main: 'Outfit', sans-serif;
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+    background-color: var(--bg-dark);
+    font-family: var(--font-main);
+    color: var(--text-light);
+    user-select: none;
+}
+
+#game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle at center, #2b3a55 0%, #1a2235 100%);
+}
+
+#game-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* Overlays */
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(10px);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.5s ease;
+}
+
+.overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* UI Elements */
+h1 {
+    font-size: 5rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 2rem;
+    text-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+.menu-box {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 3rem;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+}
+
+.setting-group {
+    margin-bottom: 2rem;
+}
+
+.setting-group label {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.8rem;
+    color: #cbd5e1;
+}
+
+.toggle-group {
+    display: flex;
+    gap: 1rem;
+}
+
+.toggle-btn {
+    flex: 1;
+    padding: 1rem;
+    border: 2px solid var(--glass-border);
+    background: rgba(255,255,255,0.05);
+    color: white;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.toggle-btn.active {
+    background: var(--secondary);
+    border-color: var(--secondary);
+    box-shadow: 0 0 15px rgba(30, 167, 253, 0.5);
+}
+
+input[type="number"] {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 12px;
+    border: 2px solid var(--glass-border);
+    background: rgba(0,0,0,0.3);
+    color: white;
+    font-size: 1.5rem;
+    font-family: inherit;
+    text-align: center;
+    font-weight: 700;
+}
+
+input[type="number"]:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.action-btn {
+    width: 100%;
+    padding: 1.2rem;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--primary), #FF7B54);
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 900;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(255, 71, 133, 0.4);
+    transition: transform 0.1s, box-shadow 0.1s;
+    margin-top: 1rem;
+}
+
+.action-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 5px 10px rgba(255, 71, 133, 0.4);
+}
+
+.instructions {
+    margin-top: 2rem;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+/* In-Game HUD */
+#in-game-ui {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+    display: flex;
+    justify-content: space-between;
+    padding: 2rem;
+}
+
+#in-game-ui.hidden {
+    display: none;
+}
+
+.player-hud {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 1.5rem 2rem;
+    min-width: 250px;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    transition: transform 0.3s;
+}
+
+#player1-ui {
+    border-left: 5px solid var(--secondary);
+}
+
+#player2-ui {
+    border-right: 5px solid var(--primary);
+    text-align: right;
+}
+
+.player-hud.hidden {
+    display: none;
+}
+
+.hud-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #cbd5e1;
+    margin-bottom: 0.5rem;
+}
+
+.hud-time {
+    font-size: 3rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.hud-progress {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--success);
+    margin-top: 0.5rem;
+}
+
+.hud-warning {
+    margin-top: 1rem;
+    padding: 0.5rem;
+    background: var(--warning);
+    color: white;
+    font-weight: bold;
+    border-radius: 8px;
+    text-align: center;
+    animation: pulse 1s infinite alternate;
+}
+
+.warning-hidden {
+    opacity: 0;
+}
+
+.hud-status {
+    margin-top: 0.5rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--accent);
+}
+
+#center-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 5rem;
+    font-weight: 900;
+    color: white;
+    text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.5);
+    padding: 2rem 4rem;
+    border-radius: 30px;
+    backdrop-filter: blur(10px);
+}
+
+#center-message.hidden {
+    display: none;
+}
+
+/* Loader */
+.loader {
+    width: 60px;
+    height: 60px;
+    border: 6px solid var(--glass-border);
+    border-top-color: var(--secondary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 2rem;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    from { transform: scale(1); box-shadow: 0 0 10px var(--warning); }
+    to { transform: scale(1.05); box-shadow: 0 0 20px var(--warning); }
+}
+
+/* Result specific */
+.result-details {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    line-height: 1.5;
+}
