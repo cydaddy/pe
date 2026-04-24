@@ -6,9 +6,9 @@
 
 // Basic State
 let state = 'LOADING'; // LOADING, MENU, CALIBRATION, PLAYING, RESULT
-let playMode = 'solo'; // solo, pvp
 let targetNumber = 10;
 let lastFrameTime = 0;
+let colorHintEnabled = true;
 
 // Game State Tracking
 class PlayerState {
@@ -72,7 +72,6 @@ class PlayerState {
 }
 
 let p1 = new PlayerState(1);
-let p2 = new PlayerState(2);
 
 // TFJS & Camera Variables
 let video, canvas, ctx;
@@ -131,8 +130,8 @@ const els = {
     overlayResult: document.getElementById('result-overlay'),
     inGameUI: document.getElementById('in-game-ui'),
     centerMsg: document.getElementById('center-message'),
-    btnSolo: document.getElementById('btn-solo'),
-    btnPvp: document.getElementById('btn-pvp'),
+    btnSolo: document.getElementById('btn-hint-on'),
+    btnPvp: document.getElementById('btn-hint-off'),
     inpTarget: document.getElementById('target-number'),
     btnStart: document.getElementById('start-btn'),
     btnRestart: document.getElementById('restart-btn'),
@@ -156,7 +155,7 @@ let inferLoopStarted = false;
 
 // 키포인트 보간: 새 포즈 생길 때마다 60fps로 부드럽게 이동
 // alpha=1: 즉시반영 (laggy 하지만 정확), alpha=0.3: 여운 후행 (smooth)
-const LERP_ALPHA = 0.4;
+const LERP_ALPHA = 0.2; // 크롬북의 지터(Jitter)를 잡기 위해 0.4에서 0.2로 낮춤
 
 function lerpPoses(current, target) {
     if (!current || current.length !== target.length) return target;
@@ -197,8 +196,8 @@ async function setupCamera() {
         const stream = await navigator.mediaDevices.getUserMedia({
             'audio': false,
             'video': { 
-                width: { ideal: 640 },   // 크롬북 성능을 위해 해상도 낮춤
-                height: { ideal: 480 }, 
+                width: { ideal: 320 },   // 크롬북 성능 최적화를 위해 해상도를 절반(320x240)으로 더 낮춤
+                height: { ideal: 240 }, 
                 facingMode: 'user' 
             }
         });
@@ -263,11 +262,6 @@ async function loadModel() {
         );
         currentModel = poseDetection.SupportedModels.BlazePose;
         console.log('모델: BlazePose (MediaPipe 폴백)');
-        // BlazePose는 1인 전용 — PVP 모드 자동 비활성화
-        if (playMode === 'pvp') {
-            playMode = 'solo';
-            console.warn('BlazePose는 1인 전용이므로 솔로 모드로 전환합니다.');
-        }
     } catch (blazeErr) {
         console.error('BlazePose도 실패:', blazeErr);
         throw new Error('MODEL_LOAD_ERROR: MoveNet와 BlazePose 모두 실패. ' + blazeErr.message);
@@ -352,12 +346,12 @@ function resizeCanvas() {
 
 // Menu Bindings
 els.btnSolo.onclick = () => {
-    playMode = 'solo';
+    colorHintEnabled = true;
     els.btnSolo.classList.add('active');
     els.btnPvp.classList.remove('active');
 };
 els.btnPvp.onclick = () => {
-    playMode = 'pvp';
+    colorHintEnabled = false;
     els.btnSolo.classList.remove('active');
     els.btnPvp.classList.add('active');
 };
@@ -381,13 +375,6 @@ function startGameCalibration() {
     
     p1.reset();
     p1.ui.container.classList.remove('hidden');
-    
-    if (playMode === 'pvp') {
-        p2.reset();
-        p2.ui.container.classList.remove('hidden');
-    } else {
-        p2.ui.container.classList.add('hidden');
-    }
 }
 
 function generateCircles(player, poseKeypoints, regionX, regionWidth, regionHeight) {
@@ -444,7 +431,6 @@ function startActualGame() {
     els.centerMsg.classList.add('hidden');
     let now = performance.now();
     p1.startTime = now;
-    if(playMode === 'pvp') p2.startTime = now;
 }
 
 function renderBaseline(ctx, x, w, y) {
@@ -542,6 +528,14 @@ function processPlayerLogic(player, pose, regionX, regionWidth, regionHeight, sc
         if (isClapping && !player.isReady) {
             player.isReady = true;
             sounds.clap();
+            
+            // Record initial shoulder distance
+            let ls = scaledKps.find(k=>k.name==='left_shoulder');
+            let rs = scaledKps.find(k=>k.name==='right_shoulder');
+            if (ls && rs && ls.score > minConf && rs.score > minConf) {
+                player.initialShoulderDist = Math.sqrt(Math.pow(ls.x - rs.x, 2) + Math.pow(ls.y - rs.y, 2));
+            }
+            
             generateCircles(player, scaledKps, regionX, regionWidth, regionHeight);
             player.ui.status.innerText = "준비 완료!";
         }
@@ -551,13 +545,29 @@ function processPlayerLogic(player, pose, regionX, regionWidth, regionHeight, sc
         
         player.elapsedTime = performance.now() - player.startTime;
         
+        // Distance detection (too close)
+        let tooClose = false;
+        if (player.initialShoulderDist) {
+            let ls = scaledKps.find(k=>k.name==='left_shoulder');
+            let rs = scaledKps.find(k=>k.name==='right_shoulder');
+            if (ls && rs && ls.score > minConf && rs.score > minConf) {
+                let dist = Math.sqrt(Math.pow(ls.x - rs.x, 2) + Math.pow(ls.y - rs.y, 2));
+                if (dist > player.initialShoulderDist * 1.3) {
+                    tooClose = true;
+                }
+            }
+        }
+
         // Jump detection
-        if (checkJump(scaledKps, player, minConf)) {
+        if (checkJump(scaledKps, player, minConf) || tooClose) {
             if(player.jumpWarningFrames === 0) {
                 sounds.error();
             }
             player.jumpWarningFrames = 60; // show warning for 1 sec at 60fps
         }
+
+        // Only process collisions if there is no warning active
+        if (player.jumpWarningFrames > 0) return;
 
         // Collision detection for hands vs active circle
         let nextTargetNum = player.progress + 1;
@@ -599,16 +609,23 @@ function processPlayerLogic(player, pose, regionX, regionWidth, regionHeight, sc
 function drawPlayerCircles(ctx, player) {
     player.circles.forEach(c => {
         if (c.num <= player.progress) return; // already popped
+        if (c.num > player.progress + 10) return; // max 10 visible numbers
         
         ctx.save();
         ctx.beginPath();
         ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
         
         if (c.num === player.progress + 1) {
-            // Next target - animate
-            ctx.fillStyle = `hsl(${(performance.now()/10) % 360}, 100%, 60%)`;
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = ctx.fillStyle;
+            // Next target - animate and color hint
+            if (colorHintEnabled) {
+                ctx.fillStyle = `hsl(${(performance.now()/10) % 360}, 100%, 60%)`;
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = ctx.fillStyle;
+            } else {
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#fff';
+            }
             ctx.lineWidth = 4;
             ctx.strokeStyle = '#fff';
         } else {
@@ -633,13 +650,11 @@ function drawPlayerCircles(ctx, player) {
 
 function checkGameState() {
     if (state === 'CALIBRATION') {
-        let allReady = playMode === 'solo' ? p1.isReady : (p1.isReady && p2.isReady);
-        if (allReady) {
+        if (p1.isReady) {
             startActualGame();
         }
     } else if (state === 'PLAYING') {
-        let allFinished = playMode === 'solo' ? p1.finished : (p1.finished && p2.finished);
-        if (allFinished) {
+        if (p1.finished) {
             state = 'RESULT';
             showResult();
         }
@@ -658,19 +673,8 @@ function showResult() {
     els.inGameUI.classList.add('hidden');
     els.overlayResult.classList.remove('hidden');
     
-    if (playMode === 'solo') {
-        els.resTitle.innerText = "임무 완수!";
-        els.resDetails.innerHTML = `걸린 시간: <span style="color:var(--accent);font-weight:900;">${formatTime(p1.finishTime)}</span>`;
-    } else {
-        els.resTitle.innerText = "게임 종료!";
-        let winner = p1.finishTime < p2.finishTime ? "Player 1" : "Player 2";
-        els.resDetails.innerHTML = `
-            <div style="color:var(--success); font-weight:900; font-size: 3rem;">WINNER: ${winner}</div>
-            <br>
-            Player 1: ${formatTime(p1.finishTime)}<br>
-            Player 2: ${formatTime(p2.finishTime)}
-        `;
-    }
+    els.resTitle.innerText = "임무 완수!";
+    els.resDetails.innerHTML = `걸린 시간: <span style="color:var(--accent);font-weight:900;">${formatTime(p1.finishTime)}</span>`;
 }
 
 // 추론 루프: 렌더링과 독립적으로 AI 추론만 담당.
@@ -680,7 +684,7 @@ async function inferLoop() {
     inferLoopStarted = true;
 
     const isBlazePose = currentModel === poseDetection.SupportedModels.BlazePose;
-    const maxPoses = isBlazePose ? 1 : (playMode === 'pvp' ? 2 : 1);
+    const maxPoses = 1;
 
     while (renderLoopStarted) {
         if ((state === 'CALIBRATION' || state === 'PLAYING') && video && video.readyState >= 2) {
@@ -699,19 +703,10 @@ async function inferLoop() {
                         x: vw - kp.x
                     }))
                 }));
-
-                // PVP: x값 기준 좌우 정렬
-                if (playMode === 'pvp' && lastPoses.length >= 2) {
-                    lastPoses.sort((a, b) => {
-                        const ax = a.keypoints.find(k => k.name === 'nose')?.x || 0;
-                        const bx = b.keypoints.find(k => k.name === 'nose')?.x || 0;
-                        return ax - bx;
-                    });
-                }
             } catch (e) { /* 추론 오류 무시 */ }
         }
-        // 다른 작업에 CPU 양보 (과도한 CPU 점유 방지)
-        await new Promise(r => setTimeout(r, 0));
+        // 크롬북 CPU 부하 및 발열 방지: 추론 빈도를 초당 약 20회(50ms 대기)로 제한
+        await new Promise(r => setTimeout(r, 50));
     }
 
     inferLoopStarted = false;
@@ -740,45 +735,14 @@ function renderLoop() {
         let vw = video.videoWidth;
         let vh = video.videoHeight;
         
-        if (playMode === 'solo') {
-            let scaleX = cw / vw;
-            let scaleY = ch / vh;
-            
-            renderBaseline(ctx, 0, cw, p1.baselineY || ch*0.85);
-            processPlayerLogic(p1, poses[0], 0, cw, ch, scaleX, scaleY);
-            if(poses[0]) drawSkeleton(ctx, poses[0].keypoints, 0.3, 0, scaleX, scaleY);
-            drawPlayerCircles(ctx, p1);
-            p1.updateUI();
-        } else {
-            // PVP Split Screen
-            let halfW = cw / 2;
-            let scaleX = halfW / vw;
-            let scaleY = ch / vh;
-            
-            // Draw Divider
-            ctx.beginPath();
-            ctx.moveTo(halfW, 0);
-            ctx.lineTo(halfW, ch);
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 4;
-            ctx.setLineDash([10, 10]);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            
-            // Player 1 (Left)
-            renderBaseline(ctx, 0, halfW, p1.baselineY || ch*0.85);
-            processPlayerLogic(p1, poses[0], 0, halfW, ch, scaleX, scaleY);
-            if(poses[0]) drawSkeleton(ctx, poses[0].keypoints, 0.3, 0, scaleX, scaleY);
-            drawPlayerCircles(ctx, p1);
-            p1.updateUI();
-            
-            // Player 2 (Right)
-            renderBaseline(ctx, halfW, halfW, p2.baselineY || ch*0.85);
-            processPlayerLogic(p2, poses[1], halfW, halfW, ch, scaleX, scaleY);
-            if(poses[1]) drawSkeleton(ctx, poses[1].keypoints, 0.3, halfW, scaleX, scaleY);
-            drawPlayerCircles(ctx, p2);
-            p2.updateUI();
-        }
+        let scaleX = cw / vw;
+        let scaleY = ch / vh;
+        
+        renderBaseline(ctx, 0, cw, p1.baselineY || ch*0.85);
+        processPlayerLogic(p1, poses[0], 0, cw, ch, scaleX, scaleY);
+        if(poses[0]) drawSkeleton(ctx, poses[0].keypoints, 0.3, 0, scaleX, scaleY);
+        drawPlayerCircles(ctx, p1);
+        p1.updateUI();
         
         checkGameState();
     }

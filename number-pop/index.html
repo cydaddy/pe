@@ -35,10 +35,10 @@
             <h1>NUMBER POP!</h1>
             <div class="menu-box">
                 <div class="setting-group">
-                    <label>플레이 모드</label>
+                    <label>색깔 힌트 (다음 숫자 안내)</label>
                     <div class="toggle-group">
-                        <button class="toggle-btn active" id="btn-solo" data-mode="solo">솔로 플레이 (1인)</button>
-                        <button class="toggle-btn" id="btn-pvp" data-mode="pvp">1:1 배틀 (2인)</button>
+                        <button class="toggle-btn active" id="btn-hint-on" data-hint="on">켜기</button>
+                        <button class="toggle-btn" id="btn-hint-off" data-hint="off">끄기</button>
                     </div>
                 </div>
                 
@@ -59,19 +59,11 @@
         <!-- In-Game UI Overlay (Timers, Status) -->
         <div id="in-game-ui" class="hidden">
             <div id="player1-ui" class="player-hud">
-                <div class="hud-title">Player 1</div>
+                <div class="hud-title">Player</div>
                 <div class="hud-time" id="p1-time">00:00.00</div>
                 <div class="hud-progress" id="p1-progress">0 / 0</div>
-                <div class="hud-warning warning-hidden" id="p1-warning">발을 떼면 안돼요!</div>
+                <div class="hud-warning warning-hidden" id="p1-warning">발을 떼거나 너무 가까이 오지 마세요!</div>
                 <div class="hud-status" id="p1-status"></div>
-            </div>
-            
-            <div id="player2-ui" class="player-hud hidden">
-                <div class="hud-title">Player 2</div>
-                <div class="hud-time" id="p2-time">00:00.00</div>
-                <div class="hud-progress" id="p2-progress">0 / 0</div>
-                <div class="hud-warning warning-hidden" id="p2-warning">발을 떼면 안돼요!</div>
-                <div class="hud-status" id="p2-status"></div>
             </div>
             
             <div id="center-message" class="hidden">준비...</div>
