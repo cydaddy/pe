@@ -41,6 +41,14 @@
                         <button class="toggle-btn" id="btn-hint-off" data-hint="off">끄기</button>
                     </div>
                 </div>
+
+                <div class="setting-group">
+                    <label>초시계 (타이머)</label>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" id="btn-timer-on" data-timer="on">켜기</button>
+                        <button class="toggle-btn" id="btn-timer-off" data-timer="off">끄기</button>
+                    </div>
+                </div>
                 
                 <div class="setting-group">
                     <label>목표 숫자</label>
@@ -62,11 +70,11 @@
                 <div class="hud-title">Player</div>
                 <div class="hud-time" id="p1-time">00:00.00</div>
                 <div class="hud-progress" id="p1-progress">0 / 0</div>
-                <div class="hud-warning warning-hidden" id="p1-warning">발을 떼거나 너무 가까이 오지 마세요!</div>
                 <div class="hud-status" id="p1-status"></div>
             </div>
             
             <div id="center-message" class="hidden">준비...</div>
+            <div id="center-warning" class="hidden">발을 떼거나 너무 가까이 오지 마세요!</div>
         </div>
 
         <!-- Result Overlay -->

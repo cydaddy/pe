@@ -9,6 +9,7 @@ let state = 'LOADING'; // LOADING, MENU, CALIBRATION, PLAYING, RESULT
 let targetNumber = 10;
 let lastFrameTime = 0;
 let colorHintEnabled = true;
+let timerEnabled = true;
 
 // Game State Tracking
 class PlayerState {
@@ -34,7 +35,7 @@ class PlayerState {
             container: document.getElementById(`player${id}-ui`),
             time: document.getElementById(`p${id}-time`),
             progress: document.getElementById(`p${id}-progress`),
-            warning: document.getElementById(`p${id}-warning`),
+            warning: document.getElementById(`center-warning`),
             status: document.getElementById(`p${id}-status`)
         };
     }
@@ -56,17 +57,22 @@ class PlayerState {
         this.ui.progress.innerText = `${this.progress} / ${targetNumber}`;
         
         // Update Time (MM:SS.ms)
-        let timeToDisplay = this.finished ? this.finishTime : this.elapsedTime;
-        let ms = timeToDisplay % 1000;
-        let s = Math.floor((timeToDisplay / 1000) % 60);
-        let m = Math.floor(timeToDisplay / 60000);
-        this.ui.time.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${Math.floor(ms/10).toString().padStart(2, '0')}`;
+        if (timerEnabled) {
+            this.ui.time.style.display = 'block';
+            let timeToDisplay = this.finished ? this.finishTime : this.elapsedTime;
+            let ms = timeToDisplay % 1000;
+            let s = Math.floor((timeToDisplay / 1000) % 60);
+            let m = Math.floor(timeToDisplay / 60000);
+            this.ui.time.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${Math.floor(ms/10).toString().padStart(2, '0')}`;
+        } else {
+            this.ui.time.style.display = 'none';
+        }
         
         if (this.jumpWarningFrames > 0) {
-            this.ui.warning.classList.remove('warning-hidden');
+            this.ui.warning.classList.remove('hidden');
             this.jumpWarningFrames--;
         } else {
-            this.ui.warning.classList.add('warning-hidden');
+            this.ui.warning.classList.add('hidden');
         }
     }
 }
@@ -132,6 +138,8 @@ const els = {
     centerMsg: document.getElementById('center-message'),
     btnSolo: document.getElementById('btn-hint-on'),
     btnPvp: document.getElementById('btn-hint-off'),
+    btnTimerOn: document.getElementById('btn-timer-on'),
+    btnTimerOff: document.getElementById('btn-timer-off'),
     inpTarget: document.getElementById('target-number'),
     btnStart: document.getElementById('start-btn'),
     btnRestart: document.getElementById('restart-btn'),
@@ -354,6 +362,16 @@ els.btnPvp.onclick = () => {
     colorHintEnabled = false;
     els.btnSolo.classList.remove('active');
     els.btnPvp.classList.add('active');
+};
+els.btnTimerOn.onclick = () => {
+    timerEnabled = true;
+    els.btnTimerOn.classList.add('active');
+    els.btnTimerOff.classList.remove('active');
+};
+els.btnTimerOff.onclick = () => {
+    timerEnabled = false;
+    els.btnTimerOn.classList.remove('active');
+    els.btnTimerOff.classList.add('active');
 };
 els.btnStart.onclick = () => {
     initAudio();
@@ -615,22 +633,17 @@ function drawPlayerCircles(ctx, player) {
         ctx.beginPath();
         ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
         
-        if (c.num === player.progress + 1) {
+        if (c.num === player.progress + 1 && colorHintEnabled) {
             // Next target - animate and color hint
-            if (colorHintEnabled) {
-                ctx.fillStyle = `hsl(${(performance.now()/10) % 360}, 100%, 60%)`;
-                ctx.shadowBlur = 20;
-                ctx.shadowColor = ctx.fillStyle;
-            } else {
-                ctx.fillStyle = 'rgba(255,255,255,0.8)';
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = '#fff';
-            }
+            ctx.fillStyle = `hsl(${(performance.now()/10) % 360}, 100%, 60%)`;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = ctx.fillStyle;
             ctx.lineWidth = 4;
             ctx.strokeStyle = '#fff';
         } else {
-            // Upcoming targets
+            // Upcoming targets (or next target when hints are disabled)
             ctx.fillStyle = 'rgba(255,255,255,0.2)';
+            ctx.shadowBlur = 0;
             ctx.lineWidth = 2;
             ctx.strokeStyle = 'rgba(255,255,255,0.5)';
         }
