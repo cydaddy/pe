@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>무궁화 꽃이 피었습니다 — AI 체육 게임</title>
+    <meta name="description" content="AI 신체 인식 기반 무궁화 꽃이 피었습니다 체육 활동 게임">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <!-- TensorFlow.js (pinned versions — same as number-pop) -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@4.22.0/dist/tf-core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter@4.22.0/dist/tf-converter.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.22.0/dist/tf-backend-webgl.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-cpu@4.22.0/dist/tf-backend-cpu.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3/dist/pose-detection.min.js"></script>
+</head>
+<body>
+<div id="game-container">
+    <!-- Hidden camera feed -->
+    <video id="video" playsinline style="display:none;"></video>
+
+    <!-- Main game canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- ── OVERLAY: Loading ── -->
+    <div id="loading-overlay" class="overlay active">
+        <div class="loader"></div>
+        <h2>카메라와 AI 모델을 불러오는 중...</h2>
+        <p id="loading-msg">잠시만 기다려주세요.</p>
+        <button id="retry-btn" class="action-btn hidden" style="width:auto;padding:.8rem 2rem;margin-top:1.5rem;">다시 시도</button>
+    </div>
+
+    <!-- ── OVERLAY: Start Menu ── -->
+    <div id="start-menu" class="overlay hidden">
+        <h1>🌸 무궁화</h1>
+
+        <div class="menu-box">
+            <!-- Mode Selection -->
+            <div class="setting-group">
+                <label>게임 모드</label>
+                <div class="mode-grid">
+                    <button class="mode-btn active" id="mode-approach" data-mode="approach">
+                        <span class="mode-icon">🚶</span>
+                        <span class="mode-name">다가오기</span>
+                        <span class="mode-desc">화면을 터치하면 승리!</span>
+                    </button>
+                    <button class="mode-btn" id="mode-squat" data-mode="squat">
+                        <span class="mode-icon">🏋️</span>
+                        <span class="mode-name">스쿼트</span>
+                        <span class="mode-desc">제자리 스쿼트 챌린지</span>
+                    </button>
+                    <button class="mode-btn" id="mode-pose" data-mode="pose">
+                        <span class="mode-icon">🙆</span>
+                        <span class="mode-name">포즈 따라하기</span>
+                        <span class="mode-desc">빨간불에 포즈를 맞춰라</span>
+                    </button>
+                    <button class="mode-btn" id="mode-jump" data-mode="jump">
+                        <span class="mode-icon">🦘</span>
+                        <span class="mode-name">점핑잭</span>
+                        <span class="mode-desc">팔벌려뛰기 횟수 카운트</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Difficulty -->
+            <div class="setting-group">
+                <label>난이도</label>
+                <div class="toggle-group">
+                    <button class="toggle-btn" id="diff-easy" data-diff="easy">😊 쉬움</button>
+                    <button class="toggle-btn active" id="diff-normal" data-diff="normal">😤 보통</button>
+                    <button class="toggle-btn" id="diff-hard" data-diff="hard">😈 어려움</button>
+                </div>
+            </div>
+
+            <!-- Target count (for squat/jump modes) -->
+            <div class="setting-group" id="target-count-group">
+                <label>목표 횟수</label>
+                <input type="number" id="target-count" value="15" min="5" max="50">
+            </div>
+
+            <button id="start-btn" class="action-btn">게임 준비 →</button>
+        </div>
+
+        <div class="instructions">
+            <p>1. 기기에서 최대한 멀리 떨어져 서주세요.</p>
+            <p>2. 양손을 모아 <strong>박수</strong>를 치면 게임이 시작됩니다.</p>
+            <p>3. 🟢 <strong>초록불</strong>일 때 움직이고, 🔴 <strong>빨간불</strong>일 때 멈추세요!</p>
+        </div>
+    </div>
+
+    <!-- ── IN-GAME UI ── -->
+    <div id="in-game-ui" class="hidden">
+        <!-- Top HUD -->
+        <div id="hud-top">
+            <div class="hud-card" id="hud-mode-label">🚶 다가오기</div>
+            <div class="hud-card" id="hud-timer">60</div>
+            <div class="hud-card" id="hud-score">0</div>
+        </div>
+
+        <!-- Traffic Light State Banner (center top) -->
+        <div id="light-banner" class="light-green">🟢 움직여!</div>
+
+        <!-- Warning Overlay (movement on red) -->
+        <div id="center-warning" class="hidden">💥 걸렸다!</div>
+
+        <!-- Calibration message -->
+        <div id="center-message" class="hidden">바닥 선에 발을 맞추고<br>박수를 쳐서 시작!</div>
+
+        <!-- Pose target display (pose mode) -->
+        <div id="pose-target" class="hidden">
+            <div id="pose-icon">🙌</div>
+            <div id="pose-label">양팔 만세!</div>
+        </div>
+
+        <!-- Progress bar (approach mode) -->
+        <div id="progress-bar-wrap" class="hidden">
+            <div id="progress-bar-fill"></div>
+            <div id="progress-bar-label">0%</div>
+        </div>
+    </div>
+
+    <!-- ── OVERLAY: Result ── -->
+    <div id="result-overlay" class="overlay hidden">
+        <h1 id="result-title">🎉 성공!</h1>
+        <div class="result-details" id="result-details"></div>
+        <div class="result-btn-row">
+            <button id="restart-btn" class="action-btn">다시 하기</button>
+            <button id="menu-btn" class="action-btn secondary-btn">메뉴로</button>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
