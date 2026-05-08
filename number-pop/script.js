@@ -246,15 +246,18 @@ async function loadModel() {
         console.log('TF 백엔드: cpu');
     }
 
-    // 1차 시도: MoveNet (tfhub.dev에서 모델 로딩)
+    // 1차 시도: MoveNet (로컬 모델 로딩)
     try {
-        const config = { modelType: poseDetection.movenet.modelType.MULTIPOSE_LIGHTNING };
+        const config = { 
+            modelType: poseDetection.movenet.modelType.MULTIPOSE_LIGHTNING,
+            modelUrl: './models/movenet/model.json'
+        };
         detector = await poseDetection.createDetector(poseDetection.SupportedModels.MoveNet, config);
         currentModel = poseDetection.SupportedModels.MoveNet;
-        console.log('모델: MoveNet MULTIPOSE');
+        console.log('모델: MoveNet MULTIPOSE (로컬)');
         return; // 성공
     } catch (moveNetErr) {
-        console.warn('MoveNet 로딩 실패 (tfhub.dev 차단 가능성):', moveNetErr.message);
+        console.warn('MoveNet 로컬 로딩 실패:', moveNetErr.message);
     }
 
     // 2차 시도: BlazePose via MediaPipe (jsDelivr CDN — 학교 방화벽 우회)
