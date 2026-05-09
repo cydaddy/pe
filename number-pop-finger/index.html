@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Pop Finger! PE Activity</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <!-- TensorFlow.js dependencies (local files for offline/school network support) -->
+    <script src="libs/tf-core.min.js"></script>
+    <script src="libs/tf-converter.min.js"></script>
+    <script src="libs/tf-backend-webgl.min.js"></script>
+    <script src="libs/tf-backend-cpu.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection@2.0.1/dist/hand-pose-detection.min.js"></script>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Video Element for MediaPipe -->
+        <video id="video" playsinline></video>
+        
+        <!-- Game Canvas for Characters and UI -->
+        <canvas id="game-canvas"></canvas>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="overlay active">
+            <div class="loader"></div>
+            <h2>카메라와 AI 모델을 불러오는 중...</h2>
+            <p>잠시만 기다려주세요.</p>
+            <button id="retry-init-btn" class="action-btn hidden" style="width: auto; padding: 0.8rem 2rem; margin-top: 1.5rem;">다시 시도</button>
+        </div>
+
+        <!-- Start Menu Overlay -->
+        <div id="start-menu" class="overlay hidden">
+            <h1>NUMBER POP FINGER!</h1>
+            <div class="menu-box">
+                <div class="setting-group">
+                    <label>색깔 힌트 (다음 숫자 안내)</label>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" id="btn-hint-on" data-hint="on">켜기</button>
+                        <button class="toggle-btn" id="btn-hint-off" data-hint="off">끄기</button>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label>초시계 (타이머)</label>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" id="btn-timer-on" data-timer="on">켜기</button>
+                        <button class="toggle-btn" id="btn-timer-off" data-timer="off">끄기</button>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <label>목표 숫자</label>
+                    <input type="number" id="target-number" value="10" min="5" max="50">
+                </div>
+
+                <button id="start-btn" class="action-btn">게임 준비</button>
+            </div>
+            <div class="instructions">
+                <p>1. 화면에 손을 비추어 카메라가 손을 인식하게 하세요.</p>
+                <p>2. 화면에 나타나는 <strong>[시작]</strong> 구슬을 터치하면 시작됩니다.</p>
+                <p>3. 순서대로 나타나는 숫자를 손가락 끝으로 재빨리 터치하세요!</p>
+            </div>
+        </div>
+
+        <!-- In-Game UI Overlay (Timers, Status) -->
+        <div id="in-game-ui" class="hidden">
+            <div id="player1-ui" class="player-hud">
+                <div class="hud-title">Player</div>
+                <div class="hud-time" id="p1-time">00:00.00</div>
+                <div class="hud-progress" id="p1-progress">0 / 0</div>
+                <div class="hud-status" id="p1-status"></div>
+            </div>
+            
+            <div id="center-message" class="hidden">준비...</div>
+        </div>
+
+        <!-- Result Overlay -->
+        <div id="result-overlay" class="overlay hidden">
+            <h1 id="result-title">게임 종료!</h1>
+            <div class="result-details" id="result-details">
+                <!-- Injected via JS -->
+            </div>
+            <button id="restart-btn" class="action-btn">다시 하기</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

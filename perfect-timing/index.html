@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beat Snap! - 타이밍 PE 게임</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <!-- TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@4.22.0/dist/tf-core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter@4.22.0/dist/tf-converter.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.22.0/dist/tf-backend-webgl.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-cpu@4.22.0/dist/tf-backend-cpu.min.js"></script>
+    <!-- MediaPipe Hands -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js"></script>
+    <!-- Hand detection model -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection@2.0.1/dist/hand-pose-detection.min.js"></script>
+</head>
+<body>
+    <div id="game-container">
+        <video id="video" playsinline></video>
+        <canvas id="game-canvas"></canvas>
+
+        <!-- Loading -->
+        <div id="loading-overlay" class="overlay active">
+            <div class="loader"></div>
+            <h2>카메라와 손 인식 모델을 불러오는 중...</h2>
+            <p>잠시만 기다려주세요.</p>
+            <button id="retry-btn" class="action-btn hidden">다시 시도</button>
+        </div>
+
+        <!-- Start Menu -->
+        <div id="start-menu" class="overlay hidden">
+            <h1>BEAT<br>SNAP!</h1>
+            <div class="menu-box">
+                <div class="setting-group">
+                    <label>라운드 수</label>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" data-rounds="10">10</button>
+                        <button class="toggle-btn" data-rounds="20">20</button>
+                        <button class="toggle-btn" data-rounds="30">30</button>
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <label>난이도</label>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" data-difficulty="easy">쉬움</button>
+                        <button class="toggle-btn" data-difficulty="normal">보통</button>
+                        <button class="toggle-btn" data-difficulty="hard">어려움</button>
+                    </div>
+                </div>
+                <button id="start-btn" class="action-btn">게임 시작</button>
+            </div>
+            <div class="instructions">
+                <p>🎯 공이 중앙 타겟 존을 통과하는 순간 손을 들어올리세요!</p>
+                <p>⚡ PERFECT &gt; GOOD &gt; MISS — 타이밍이 전부입니다</p>
+            </div>
+        </div>
+
+        <!-- In-Game HUD -->
+        <div id="in-game-ui" class="hidden">
+            <div id="hud-left">
+                <div class="hud-label">라운드</div>
+                <div class="hud-value" id="hud-round">1 / 10</div>
+            </div>
+            <div id="hud-center">
+                <div id="timing-feedback"></div>
+            </div>
+            <div id="hud-right">
+                <div class="hud-label">점수</div>
+                <div class="hud-value" id="hud-score">0</div>
+            </div>
+        </div>
+
+        <!-- Result -->
+        <div id="result-overlay" class="overlay hidden">
+            <h1 id="result-title">결과!</h1>
+            <div class="result-details" id="result-details"></div>
+            <div class="result-rank" id="result-rank"></div>
+            <button id="restart-btn" class="action-btn">다시 하기</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
