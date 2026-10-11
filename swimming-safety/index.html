@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#087e8b">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23087e8b'/%3E%3Ctext x='32' y='47' text-anchor='middle' font-size='52' fill='white'%3E≈%3C/text%3E%3C/svg%3E">
-  <title>첨벙! 수영장 안전 탐험대</title>
+  <title>첨벙! 생존 수영 안전 탐험대</title>
   <link rel="stylesheet" href="style.css">
   <script src="questions.js" defer></script>
   <script src="script.js" defer></script>
@@ -13,15 +13,14 @@
 <body>
   <header class="site-header">
     <a class="brand" href="index.html"><span class="brand-icon" aria-hidden="true">≈</span> 첨벙! <span>안전 탐험대</span></a>
-    <button class="text-button" id="teacher-open">선생님 자료</button>
   </header>
   <main id="main">
     <section id="welcome" class="welcome" aria-labelledby="welcome-title">
       <div class="welcome-copy">
-        <span class="eyebrow">수영장에 가기 전, 안전 준비!</span>
+        <span class="eyebrow">생존 수영 수업 전, 안전 준비!</span>
         <h1 id="welcome-title">신나게 첨벙!<br><span>안전하게 첨벙!</span></h1>
-        <p class="intro">수영장에는 어떤 약속이 있을까?<br>10가지 미션을 풀고 안전 탐험대가 되어 봐!</p>
-        <div class="welcome-tags"><span>초등 3학년부터</span><span>10문제</span><span>시간제한 없음</span></div>
+        <p class="intro">생존 수영 수업에서는 어떤 약속이 있을까?<br>10가지 미션을 풀고 안전 탐험대가 되어 봐!</p>
+        <div class="welcome-tags"><span>10문제</span><span>시간제한 없음</span></div>
         <button class="primary large" id="start">안전 탐험 시작 <span aria-hidden="true">→</span></button>
         <p class="small-note">틀려도 괜찮아. 설명을 읽고 다시 도전해 봐!</p>
       </div>
@@ -33,9 +32,8 @@
           <path d="M56 148h370M46 208h389M57 269h370M128 96v226M240 94v232M352 96v226" stroke="#a5e7e8" stroke-width="3"/>
           <path d="M63 166q20-14 40 0t40 0M300 279q20-14 40 0t40 0M268 129q17-12 34 0t34 0" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
           <ellipse cx="211" cy="225" rx="89" ry="57" fill="#087e8b" opacity=".16"/>
-          <ellipse cx="208" cy="210" rx="77" ry="52" fill="#ffbd63" stroke="#153e44" stroke-width="3"/>
-          <ellipse cx="208" cy="210" rx="39" ry="26" fill="#75d5dc" stroke="#153e44" stroke-width="3"/>
-          <path d="M145 183l25 18M173 249l10-25M246 239l-18-18M263 177l-28 18" stroke="#fff5d6" stroke-width="17"/>
+          <path d="M174 179q-10 20-4 47h77q6-27-8-47" fill="#087e8b" stroke="#153e44" stroke-width="3"/>
+          <path d="M143 226q20-14 40 0t40 0t40 0" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
           <path d="M158 171q-4-45 29-61q40-13 61 30l14 36q-12 25-56 24q-28 0-48-29" fill="#fff6dc" stroke="#153e44" stroke-width="3"/>
           <path d="M160 139q-9-44 33-53q43-5 54 43l-9 2q-16-19-48-9l-30 17" fill="#ff745c" stroke="#153e44" stroke-width="3"/>
           <rect x="168" y="138" width="29" height="20" rx="8" fill="#153e44"/>
@@ -70,15 +68,6 @@
     </section>
     <section id="result" class="result" hidden aria-labelledby="result-title"></section>
   </main>
-  <footer class="site-footer">즐거운 물놀이의 시작은 안전 약속! <span>POOL SAFETY CLUB</span></footer>
-  <dialog id="teacher-dialog" aria-labelledby="teacher-title">
-    <div class="dialog-heading"><h2 id="teacher-title">선생님 자료</h2><button id="teacher-close" class="text-button">닫기 ✕</button></div>
-    <p>초3 기준 · 총 10문제 · 자유롭게 생각하고 이야기 나누기</p>
-    <p>첫 답 기준으로 점수를 매기고, 틀린 문제는 다시 풀 수 있어요. 선 연결은 양쪽 항목을 차례로 누르면 됩니다.</p>
-    <div class="teacher-actions"><button id="print-student" class="primary">문제지 인쇄</button><button id="print-key" class="secondary">정답·해설 인쇄</button></div>
-    <div id="teacher-content"></div>
-    <p class="source-note">안전 내용 참고: <a href="https://www.redcross.org/get-help/how-to-prepare-for-emergencies/types-of-emergencies/water-safety/water-safety-for-kids.html" target="_blank" rel="noopener">미국 적십자 어린이 물 안전교육</a>, <a href="https://www.redcross.org/get-help/how-to-prepare-for-emergencies/types-of-emergencies/water-safety/swim-safety.html" target="_blank" rel="noopener">수영 안전수칙</a>, <a href="https://www.poolsafely.gov/parents/safety-tips" target="_blank" rel="noopener">Pool Safely 안전수칙</a>.</p>
-  </dialog>
-  <div id="print-sheet"></div>
+  <footer class="site-footer">안전한 생존 수영 수업의 시작은 안전 약속! <span>POOL SAFETY CLUB</span></footer>
 </body>
 </html>

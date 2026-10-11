@@ -113,7 +113,7 @@ function renderAnswers() {
     host.append(sentence);
     const label = document.createElement('p');
     label.className = 'bank-label';
-    label.textContent = '단어 주머니 · 같은 단어를 여러 번 골라도 돼요';
+    label.textContent = '단어 주머니 · 빈칸에 알맞은 단어를 골라요';
     host.append(label);
     const bank = document.createElement('div');
     bank.className = 'word-bank';
@@ -289,22 +289,3 @@ function showResult() {
   window.scrollTo({top:0, behavior:'instant'});
 }
 $('start').onclick = () => startRound(questions.map((_, i) => i));
-$('teacher-open').onclick = () => {
-  $('teacher-content').innerHTML = questions.map((q, i) => `<article class="teacher-question"><h3>${i + 1}. ${escapeHTML(q.title)} <small>(${q.label})</small></h3><p><strong>정답:</strong> ${escapeHTML(answerText(q))}</p><p>${escapeHTML(q.explanation)}</p></article>`).join('');
-  $('teacher-dialog').showModal();
-};
-$('teacher-close').onclick = () => $('teacher-dialog').close();
-function printMaterials(key) {
-  $('print-sheet').innerHTML = `<div class="${key ? 'key-mode' : ''}"><h1>첨벙! 수영장 안전 탐험대</h1><div class="print-name"><span>${key ? '선생님용 정답·해설' : '학년: ____ 반: ____ 이름: __________'}</span><span>총 10문제</span></div><p class="print-intro">${key ? '첫 답 기준으로 문제당 1점. 여러 항목이 있는 문항은 모두 맞으면 1점입니다. 고학년은 답을 고른 이유를 함께 이야기해 보세요.' : '안전한 물놀이를 위한 10가지 미션! 안내에 따라 고르거나 선을 연결해요.'}</p>${questions.map((q, i) => {
-    let body = '';
-    if (q.type === 'word') body = `<p>${q.parts.map((p, j) => escapeHTML(p) + (j < q.answer.length ? ' ( __________ ) ' : '')).join('').replace(/\n/g, '<br>')}</p><div class="print-options">보기: ${q.options.map(escapeHTML).join(' / ')} (같은 단어를 여러 번 써도 돼요)</div>`;
-    else if (q.type === 'match') body = `<div class="print-match"><div>${q.left.map((v,j) => `${j + 1}. ${escapeHTML(v)} ○`).join('<br>')}</div><div>${q.right.map((v,j) => `○ ${['ㄱ','ㄴ','ㄷ'][j]}. ${escapeHTML(v)}`).join('<br>')}</div></div>`;
-    else if (q.type === 'sort') body = `<div class="print-sort">${q.items.map(v => `${escapeHTML(v)}　[ 안전 / 위험 ]`).join('<br>')}</div>`;
-    else body = `<div class="print-options">${q.options.map((v,j) => `${letters[j]} ${escapeHTML(v)}`).join('<br>')}</div>${q.type === 'order' ? '<p>순서: (　　) → (　　) → (　　)</p>' : ''}`;
-    return `<article class="print-question"><h2>${i + 1}. ${escapeHTML(q.title)} [${q.label}]</h2>${key ? `<div class="print-answer"><strong>정답:</strong> ${escapeHTML(answerText(q))}<br>${escapeHTML(q.explanation)}</div>` : `<p>${q.type === 'word' ? '보기에서 알맞은 단어를 골라 빈칸에 넣어요.' : q.type === 'match' ? '표지판과 알맞은 행동을 선으로 연결해요.' : q.type === 'order' ? '먼저 할 행동부터 보기 번호를 써요.' : escapeHTML(q.instruction)}</p>${body}`}</article>`;
-  }).join('')}<p class="print-sources">참고: 미국 적십자 Water Safety for Kids / Swimming Safety, Pool Safely Safety Tips. 수영장에서는 선생님과 안전요원의 안내를 따라요.</p></div>`;
-  $('teacher-dialog').close();
-  window.print();
-}
-$('print-student').onclick = () => printMaterials(false);
-$('print-key').onclick = () => printMaterials(true);
